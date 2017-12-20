@@ -19,7 +19,7 @@ def updateXMLDB():
 	print("Updating DB from nswdb.com...")
 	urllib.urlretrieve("http://nswdb.com/xml.php", "DB.xml")
 
-def getDataFromNCI(path):
+def getDataFromXCI(path):
 	crc32Value = 0
 	sha256HFS0 = ""
 	sha256crypto = ""
@@ -87,4 +87,4 @@ else:
 				printHelp()
 				break
 			else:
-				getDataFromNCI(sys.argv[i+1])
+				getDataFromXCI(sys.argv[i+1])

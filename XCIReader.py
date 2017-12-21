@@ -14,7 +14,9 @@ def printHelp():
 	print("-h | --help            Print this help")
 	print("-f | --file            Path to XCI rom")
 	print("-u | --update          Updates the XML DB")
-
+	print("--dump-cert            Dumps the cert to the location specified")
+	print("--inject-cert          Injects the cert from the location specified")
+	
 def updateXMLDB():
 	print("Updating DB from nswdb.com...")
 	urllib.urlretrieve("http://nswdb.com/xml.php", "DB.xml")
@@ -23,7 +25,7 @@ def getDataFromXCI(path):
 	crc32Value = 0
 	sha256HFS0 = ""
 	sha256crypto = ""
-	with open(path, "rb") as XCIFile:
+	with open(path, "r+b") as XCIFile:
 		XCIFile.seek(0x10D)
 		cartridgeSize = XCIFile.read(1)
 		if cartridgeSize == '\xf8':
@@ -46,6 +48,25 @@ def getDataFromXCI(path):
 		while len(buffer) > 0: #Calculate the crc32 of the whole file
 			crc32Value = crc32(buffer, crc32Value)
 			buffer = XCIFile.read(0x10000)
+		if "--dump-cert" in sys.argv:
+			if sys.argv.index("--dump-cert") == len(sys.argv) - 1:
+				print("Error! No path for the cert file provided!")
+			else:
+				print("Dumping cert...")
+				XCIFile.seek(0x7000)
+				buffer = XCIFile.read(0x200)
+				with open(sys.argv[sys.argv.index("--dump-cert")+1], "wb") as certFile:
+					certFile.write(buffer)
+		if "--inject-cert" in sys.argv:
+			if sys.argv.index("--inject-cert") == len(sys.argv) - 1:
+				print("Error! No path for the cert file provided!")
+			else:
+				print("Injecting cert...")
+				with open(sys.argv[sys.argv.index("--inject-cert")+1], "rb") as certFile:
+					buffer = certFile.read(0x200)
+					XCIFile.seek(0x7000)
+					XCIFile.write(buffer)
+					
 	crc32Value = crc32Value & 0xFFFFFFFF
 	tree = etree.parse("DB.xml")
 	for imgcrc in tree.xpath("/releases/release/imgcrc"):
